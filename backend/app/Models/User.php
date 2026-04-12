@@ -46,4 +46,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function frigo()
+    {
+        return $this->hasOne(Frigo::class);
+    }
 }
