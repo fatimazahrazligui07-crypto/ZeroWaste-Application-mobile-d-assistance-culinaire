@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/services/auth_screen.dart';
+
 import 'screens/home/home_screen.dart';
 import 'screens/frigo/mon_frigo_screen.dart';
 import 'screens/recettes/recettes_screen.dart';
@@ -25,13 +27,15 @@ class ZeroWasteApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      initialRoute: '/home',
+      home: const AuthScreen(),
+      /*initialRoute: '/login',
       routes: {
-        '/home':     (_) => const HomeScreen(),
+        //'/login':    (_) => const AuthScreen(),
+        '/home':     (_) => const AuthScreen(),
         '/frigo':    (_) => const MonFrigoScreen(),
         '/recettes': (_) => const RecettesScreen(),
         '/profil':   (_) => const ProfilScreen(),
-      },
+      },*/
     );
   }
 }

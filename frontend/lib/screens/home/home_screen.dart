@@ -17,7 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final HomeService _service = HomeService();
   HomeStats? _stats;
   List<Recette> _recettes = [];
-  bool _loading = true;
+  bool _loading = false;
 
   @override
   void initState() {
