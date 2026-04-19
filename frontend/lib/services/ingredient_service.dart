@@ -4,7 +4,7 @@ import '../models/ingredient.dart';
 import '../models/categorie.dart';
 
 class IngredientService {
-static const String _base = 'http://192.168.0.104:8000/api';
+static const String _base = 'http://192.168.100.90:8000/api';
   Future<List<Ingredient>> fetchIngredients() async {
     final response = await http.get(Uri.parse('$_base/ingredients'));
 

@@ -40,6 +40,8 @@ class _LoginFormState extends State<LoginForm> {
             const SnackBar(content: Text('Connexion réussie !')),
           );
           // TODO: Naviguer vers l'écran principal
+          //ligne ajoutée  pour naviger vers home
+             Navigator.pushReplacementNamed(context, '/home');
         } else {
           String errorMessage = response['message'] ?? 'Une erreur est survenue';
           if (response['errors'] != null) {
@@ -67,11 +69,12 @@ class _LoginFormState extends State<LoginForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return SingleChildScrollView(
+     child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           _buildTextField(
             controller: _emailController,
             labelText: 'Email',
@@ -101,7 +104,9 @@ class _LoginFormState extends State<LoginForm> {
           ),
           const SizedBox(height: 24.0),
           _buildLoginButton(),
-        ],
+        
+      ],
+        ),
       ),
     );
   }

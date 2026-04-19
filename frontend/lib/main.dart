@@ -27,15 +27,15 @@ class ZeroWasteApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const AuthScreen(),
-      /*initialRoute: '/login',
+     // home: const AuthScreen(),
+      initialRoute: '/login',
       routes: {
-        //'/login':    (_) => const AuthScreen(),
-        '/home':     (_) => const AuthScreen(),
+        '/login':    (_) => const AuthScreen(),
+        '/home':     (_) => const HomeScreen(), // <-- CHANGEZ CECI (était AuthScreen)
         '/frigo':    (_) => const MonFrigoScreen(),
         '/recettes': (_) => const RecettesScreen(),
         '/profil':   (_) => const ProfilScreen(),
-      },*/
+      },
     );
   }
 }

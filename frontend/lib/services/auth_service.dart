@@ -4,9 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 
 class AuthService {
-  final String _baseUrl = 'http://10.0.2.2:8000/api'; // Remplacez par l'URL de votre backend Laravel
+  //final String _baseUrl = 'http://10.0.2.2:8000/api'; // Remplacez par l'URL de votre backend Laravel
   // Pour Android Emulator, utilisez 10.0.2.2. Pour iOS Simulator ou un appareil réel, utilisez l'IP de votre machine.
-
+ static const String _baseUrl = 'http://192.168.100.90:8000/api'; 
   Future<Map<String, dynamic>> signup(
       String firstname, String? lastname, String username, String email, String password, String passwordConfirmation) async {
     final response = await http.post(
@@ -27,7 +27,8 @@ class AuthService {
 
   Future<Map<String, dynamic>> login(String email, String password) async {
     final response = await http.post(
-      Uri.parse('$_baseUrl/login'),
+      //Uri.parse('$_baseUrl/login'),
+      Uri.parse('$_baseUrl/auth/login'),
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
         'email': email,

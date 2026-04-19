@@ -5,7 +5,7 @@ import '../models/home_stats.dart';
 import '../models/recette.dart';
 
 class HomeService {
-static const String _base = 'http://192.168.0.104:8000/api';  // 10.0.2.2 = localhost depuis l'émulateur Android
+static const String _base = 'http://192.168.100.90:8000/api';  // 10.0.2.2 = localhost depuis l'émulateur Android
   // Pour iPhone simulateur → 127.0.0.1
 
   // Token JWT stocké après login
