@@ -41,7 +41,7 @@ class _LoginFormState extends State<LoginForm> {
           );
           // TODO: Naviguer vers l'écran principal
           //ligne ajoutée  pour naviger vers home
-             Navigator.pushReplacementNamed(context, '/home');
+          Navigator.pushReplacementNamed(context, '/home');
         } else {
           String errorMessage = response['message'] ?? 'Une erreur est survenue';
           if (response['errors'] != null) {
@@ -70,42 +70,42 @@ class _LoginFormState extends State<LoginForm> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-     child: Form(
+      child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-          _buildTextField(
-            controller: _emailController,
-            labelText: 'Email',
-            hintText: 'vous@exemple.com',
-            icon: Icons.email_outlined,
-            keyboardType: TextInputType.emailAddress,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Veuillez entrer votre email';
-              }
-              if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                return 'Veuillez entrer un email valide';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 16.0),
-          _buildPasswordField(
-            controller: _passwordController,
-            labelText: 'Mot de passe',
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Veuillez entrer votre mot de passe';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 24.0),
-          _buildLoginButton(),
-        
-      ],
+            _buildTextField(
+              controller: _emailController,
+              labelText: 'Email',
+              hintText: 'vous@exemple.com',
+              icon: Icons.email_outlined,
+              keyboardType: TextInputType.emailAddress,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Veuillez entrer votre email';
+                }
+                if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                  return 'Veuillez entrer un email valide';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16.0),
+            _buildPasswordField(
+              controller: _passwordController,
+              labelText: 'Mot de passe',
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Veuillez entrer votre mot de passe';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 24.0),
+            _buildLoginButton(),
+
+          ],
         ),
       ),
     );
