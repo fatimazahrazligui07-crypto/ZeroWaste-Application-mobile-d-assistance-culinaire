@@ -18,6 +18,7 @@ return new class extends Migration
             $table->integer('tempsPreparation')->nullable();
             $table->integer('tempsCuisson')->nullable();
             $table->string('origineCulinaires')->nullable();
+            $table->string('image_url')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

@@ -12,7 +12,7 @@ return new class extends Migration
             $table->foreignId('utilisateur_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('recette_id')->constrained('recettes')->onDelete('cascade');
             $table->timestamps();
-            $table->softDeletes(); // 👈
+            $table->softDeletes(); 
         });
     }
 

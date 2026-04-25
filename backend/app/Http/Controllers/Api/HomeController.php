@@ -1,4 +1,3 @@
-// app/Http/Controllers/Api/HomeController.php
 <?php
 namespace App\Http\Controllers\Api;
 
@@ -12,7 +11,8 @@ class HomeController extends Controller
     public function index(Request $request)
     {
         $user  = $request->user();
-        $frigo = $user->frigo;
+        //$frigo = $user->frigo;
+        $frigo = $user?->frigo;
 
         // IDs des ingrédients dans le frigo
         $ingredientIds = $frigo
@@ -35,8 +35,8 @@ class HomeController extends Controller
                 return [
                     'id'               => $recette->id,
                     'nom'              => $recette->nom,
-                    'niveau_difficulte'=> $recette->niveau_difficulte,
-                    'temps_preparation'=> $recette->temps_preparation,
+                    'niveau_difficulte' => $recette->niveauDifficulte,
+                    'temps_preparation' => $recette->tempsPreparation,
                     'image_url'        => $recette->image_url,
                     'compatibilite'    => $compatibilite,
                 ];
