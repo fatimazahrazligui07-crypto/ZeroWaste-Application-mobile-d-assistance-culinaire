@@ -3,7 +3,7 @@ import 'package:frontend/services/auth_screen.dart';
 
 import 'screens/home/home_screen.dart';
 import 'screens/frigo/mon_frigo_screen.dart';
-import 'screens/recettes/recettes_screen.dart';
+import 'screens/recettes/recettes_list_screen.dart';
 import 'screens/profil/profil_screen.dart';
 import 'core/theme/colors.dart';
 
@@ -33,7 +33,7 @@ class ZeroWasteApp extends StatelessWidget {
         '/login':    (_) => const AuthScreen(),
         '/home':     (_) => const HomeScreen(), // <-- CHANGEZ CECI (était AuthScreen)
         '/frigo':    (_) => const MonFrigoScreen(),
-        '/recettes': (_) => const RecettesScreen(),
+        '/recettes': (_) => const RecettesListScreen(),
         '/profil':   (_) => const ProfilScreen(),
       },
     );
