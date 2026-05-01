@@ -6,6 +6,27 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\Api\HomeController;
+use App\Http\Controllers\Api\ProfileController;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+|
+| PUBLIC ROUTES (No authentication required)
+| GET    /api/ingredients   - Get all ingredients
+| GET    /api/categories    - Get all categories  
+| GET    /api/home          - Get home page data
+| POST   /api/auth/signup   - Register new user
+| POST   /api/auth/login    - User login
+|
+| PROTECTED ROUTES (Authentication required)
+| POST   /api/auth/logout           - Logout user
+| POST   /api/password/update       - Update user password
+| GET    /api/profile               - Get authenticated user profile
+| POST   /api/profile/update        - Update profile (firstname, lastname, username, email)
+|
+*/
 
 
 // Public routes
@@ -21,4 +42,7 @@ Route::prefix('auth')->group(function () {
 });
 
 // Password update route (outside auth prefix)
-Route::post('/password/update', [AuthController::class, 'updatePassword'])->middleware('auth:sanctum');
+Route::post('/password/update', [ProfileController::class, 'updatePassword'])->middleware('auth:sanctum');
+
+Route::get('/profile', [ProfileController::class, 'show'])->middleware('auth:sanctum');
+Route::post('/profile/update', [ProfileController::class, 'update'])->middleware('auth:sanctum');

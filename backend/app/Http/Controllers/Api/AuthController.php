@@ -76,35 +76,4 @@ class AuthController extends Controller
         ]);
     }
 
-    public function updatePassword(Request $request)
-    {
-
-        $id = auth()->user()->id;
-
-        $user = User::findOrFail($id);
-
-        $validator = validator($request->all(), [
-            'old_password' => 'required',
-            'password' => 'required|min:8|regex:/[A-Za-z]/',
-        ]);
-
-        if ($validator->fails()) {
-            $error = collect($validator->errors())->flatten()->first();
-            $field = collect($validator->errors())->keys()->first();
-            return response()->json([
-                'field' => $field,
-                'message' => $error
-            ], 422);
-        }
-
-        if (!Hash::check($request->old_password, $user->password)) {
-            return response()->json(["field" => "old_password", 'message' => 'The old password is invalid'], 422);
-        }
-
-        $user->password = Hash::make($request->password);
-        $user->save();
-
-        return response()->json(['message' => 'Password updated successfully']);
-    }
-
 }
