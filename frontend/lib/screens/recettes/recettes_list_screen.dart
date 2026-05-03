@@ -1,0 +1,480 @@
+// lib/screens/recettes/recettes_list_screen.dart
+import 'package:flutter/material.dart';
+import '../../core/theme/colors.dart';
+import '../../models/recette.dart';
+import '../../services/recette_service.dart';
+import '../../widgets/bottom_nav_bar.dart';
+
+class RecettesListScreen extends StatefulWidget {
+  const RecettesListScreen({super.key});
+
+  @override
+  State<RecettesListScreen> createState() => _RecettesListScreenState();
+}
+
+class _RecettesListScreenState extends State<RecettesListScreen> {
+  final RecetteService _service = RecetteService();
+  final TextEditingController _searchCtrl = TextEditingController();
+
+  List<Recette> _recettes = [];
+  bool _isLoading = true;
+  String? _error;
+
+  // Filtre difficulté : null = Tous
+  String? _selectedDifficulte;
+
+  static const List<String> _niveaux = [
+    'Tous',
+    'Facile',
+    'Moyen',
+    'Difficile',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final recettes = await _service.fetchRecettes(
+        search: _searchCtrl.text.trim().isEmpty ? null : _searchCtrl.text.trim(),
+        difficulte: _selectedDifficulte,
+      );
+      setState(() {
+        _recettes = recettes;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _onSearchChanged(String _) => _load();
+
+  void _onDifficulteSelected(String niveau) {
+    setState(() {
+      _selectedDifficulte = niveau == 'Tous' ? null : niveau;
+    });
+    _load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: ZWColors.fondPrincipal,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(),
+            _buildSearchBar(),
+            _buildDifficulteFilter(),
+            const SizedBox(height: 8),
+            Expanded(child: _buildBody()),
+          ],
+        ),
+      ),
+      bottomNavigationBar: const ZWBottomNavBar(currentIndex: 2),
+    );
+  }
+
+  // ──────────────────────────── Header ────────────────────────────────────────
+
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 16, 4),
+      child: Row(
+        children: [
+          const Text(
+            'Recettes',
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              color: ZWColors.brunFonce,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const Spacer(),
+          IconButton(
+            onPressed: _load,
+            icon: const Icon(Icons.tune_rounded, color: ZWColors.orange, size: 26),
+            tooltip: 'Filtres',
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ──────────────────────────── Search bar ────────────────────────────────────
+
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: TextField(
+        controller: _searchCtrl,
+        onChanged: _onSearchChanged,
+        style: const TextStyle(
+          fontSize: 14,
+          color: ZWColors.brunFonce,
+        ),
+        decoration: InputDecoration(
+          hintText: 'Rechercher une recette...',
+          hintStyle: const TextStyle(color: ZWColors.taupe, fontSize: 14),
+          prefixIcon: const Icon(Icons.search_rounded, color: ZWColors.taupe, size: 20),
+          suffixIcon: _searchCtrl.text.isNotEmpty
+              ? IconButton(
+            icon: const Icon(Icons.close_rounded, color: ZWColors.taupe, size: 18),
+            onPressed: () {
+              _searchCtrl.clear();
+              _load();
+            },
+          )
+              : null,
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: ZWColors.orange, width: 1.5),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ──────────────────────────── Difficulty chips ──────────────────────────────
+
+  Widget _buildDifficulteFilter() {
+    return SizedBox(
+      height: 40,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: _niveaux.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final niveau = _niveaux[index];
+          final isSelected = (niveau == 'Tous' && _selectedDifficulte == null) ||
+              niveau == _selectedDifficulte;
+
+          return GestureDetector(
+            onTap: () => _onDifficulteSelected(niveau),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected ? ZWColors.orange : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: isSelected
+                    ? [
+                  BoxShadow(
+                    color: ZWColors.orange.withOpacity(0.30),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+                    : [],
+              ),
+              child: Text(
+                niveau,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: isSelected ? Colors.white : ZWColors.taupe,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // ──────────────────────────── Body ──────────────────────────────────────────
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: ZWColors.orange),
+      );
+    }
+
+    if (_error != null) {
+      return _buildError();
+    }
+
+    if (_recettes.isEmpty) {
+      return _buildEmpty();
+    }
+
+    return RefreshIndicator(
+      color: ZWColors.orange,
+      onRefresh: _load,
+      child: ListView.builder(
+        padding: const EdgeInsets.only(top: 12, bottom: 24),
+        itemCount: _recettes.length,
+        itemBuilder: (context, index) => _RecetteCard(
+          recette: _recettes[index],
+          onTap: () {
+            // TODO: Navigator.pushNamed(context, '/recette', arguments: recette.id)
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildError() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.wifi_off_rounded, size: 48, color: ZWColors.taupe),
+            const SizedBox(height: 12),
+            Text(
+              'Impossible de charger les recettes',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: ZWColors.brunFonce,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            TextButton.icon(
+              onPressed: _load,
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: const Text('Réessayer'),
+              style: TextButton.styleFrom(foregroundColor: ZWColors.orange),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmpty() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.restaurant_menu_rounded, size: 56, color: ZWColors.taupe.withOpacity(0.4)),
+            const SizedBox(height: 16),
+            const Text(
+              'Aucune recette trouvée',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: ZWColors.brunFonce,
+              ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Essayez un autre filtre ou terme de recherche',
+              style: TextStyle(fontSize: 13, color: ZWColors.taupe),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Carte recette : grande image en haut + infos en bas
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _RecetteCard extends StatelessWidget {
+  final Recette recette;
+  final VoidCallback onTap;
+
+  const _RecetteCard({required this.recette, required this.onTap});
+
+  Color get _compatColor {
+    if (recette.compatibilite >= 90) return const Color(0xFF4CAF50);
+    if (recette.compatibilite >= 60) return ZWColors.safran;
+    return ZWColors.orange;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Image avec badges superposés ──
+            Stack(
+              children: [
+                // Image
+                ClipRRect(
+                  borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(20)),
+                  child: AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: recette.imageUrl != null
+                        ? Image.network(
+                      recette.imageUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => _placeholder(),
+                    )
+                        : _placeholder(),
+                  ),
+                ),
+                // Badge "X manquants" (gauche)
+                if (recette.nbManquants > 0)
+                  Positioned(
+                    top: 10,
+                    left: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: ZWColors.orange,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        '${recette.nbManquants} manquant${recette.nbManquants > 1 ? 's' : ''}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                // Badge compatibilité (droite)
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.55),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 7,
+                          height: 7,
+                          decoration: BoxDecoration(
+                            color: _compatColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          '${recette.compatibilite}%',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            // ── Infos ──
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Nom
+                  Text(
+                    recette.nom,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: ZWColors.brunFonce,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  // Temps + Difficulté
+                  Row(
+                    children: [
+                      const Icon(Icons.access_time_rounded,
+                          size: 15, color: ZWColors.taupe),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${recette.tempsPreparation} min',
+                        style: const TextStyle(
+                            fontSize: 12, color: ZWColors.taupe),
+                      ),
+                      const SizedBox(width: 16),
+                      const Icon(Icons.bar_chart_rounded,
+                          size: 15, color: ZWColors.taupe),
+                      const SizedBox(width: 4),
+                      Text(
+                        recette.niveauDifficulte,
+                        style: const TextStyle(
+                            fontSize: 12, color: ZWColors.taupe),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _placeholder() => Container(
+    color: ZWColors.orangeLight,
+    child: const Center(
+      child: Icon(Icons.restaurant_rounded,
+          color: ZWColors.orange, size: 44),
+    ),
+  );
+}
