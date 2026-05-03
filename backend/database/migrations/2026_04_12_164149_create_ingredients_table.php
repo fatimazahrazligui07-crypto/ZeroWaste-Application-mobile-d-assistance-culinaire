@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('categorie_id')->constrained('categories')->onDelete('cascade');
             $table->string('nom');
-            $table->string('svgIcon')->nullable();
+            $table->text('svgIcon')->nullable();      // text (pas string) car SVG > 255 chars
             $table->string('couleur')->nullable();
             $table->timestamps();
         });
