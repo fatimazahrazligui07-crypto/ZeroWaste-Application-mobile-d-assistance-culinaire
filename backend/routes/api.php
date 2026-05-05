@@ -7,7 +7,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\ProfileController;
-
+use App\Http\Controllers\Api\RecetteController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -33,7 +33,8 @@ use App\Http\Controllers\Api\ProfileController;
 Route::get('/ingredients', [IngredientController::class, 'index']);
 Route::get('/categories', [IngredientController::class, 'categories']);
 Route::get('/home', [HomeController::class, 'index']);
-
+Route::post('/recettes/suggest', [RecetteController::class, 'suggest']);
+Route::get('/recettes', [RecetteController::class, 'index']);
 // Auth routes
 Route::prefix('auth')->group(function () {
     Route::post('/signup', [AuthController::class, 'signup']);

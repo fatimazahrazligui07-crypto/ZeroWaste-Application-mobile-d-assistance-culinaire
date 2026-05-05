@@ -4,7 +4,7 @@ import '../models/ingredient.dart';
 import '../models/categorie.dart';
 
 class IngredientService {
-static const String _base = 'https://eternity-rehire-sanitary.ngrok-free.dev/api';
+static const String _base ='https://hurry-unbend-eradicate.ngrok-free.dev/api';
   Future<List<Ingredient>> fetchIngredients() async {
     final response = await http.get(Uri.parse('$_base/ingredients'));
 
@@ -24,4 +24,28 @@ static const String _base = 'https://eternity-rehire-sanitary.ngrok-free.dev/api
     }
     throw Exception('Erreur lors du chargement des catégories');
   }
+  Future<List<dynamic>> fetchSuggestions(List<int> ingredientIds) async {
+  final response = await http.post(
+    Uri.parse('$_base/recettes/suggest'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({'ingredient_ids': ingredientIds}),
+  );
+
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    return data['suggestions'];
+  }
+  throw Exception('Erreur lors du chargement des suggestions');
+}
+Future<Map<String, dynamic>> fetchSuggestionsRaw(List<int> ingredientIds) async {
+  final response = await http.post(
+    Uri.parse('$_base/recettes/suggest'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({'ingredient_ids': ingredientIds}),
+  );
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body);
+  }
+  throw Exception('Erreur suggestions');
+}
 }

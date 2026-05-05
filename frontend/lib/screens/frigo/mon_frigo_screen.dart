@@ -84,11 +84,28 @@ class _MonFrigoScreenState extends State<MonFrigoScreen> {
       ),
       bottomNavigationBar: const ZWBottomNavBar(currentIndex: 1),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.pushNamed(context, '/recettes'),
-        backgroundColor: ZWColors.orange,
-        label: const Text('Trouver des recettes', style: TextStyle(fontWeight: FontWeight.bold)),
-        icon: const Icon(Icons.search),
-      ),
+  onPressed: () {
+    final selectedIngredients = _ingredients
+        .where((ing) => ing.selectionne)
+        .toList();
+
+    if (selectedIngredients.length < 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sélectionnez au moins 2 ingrédients !'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final ids = selectedIngredients.map((ing) => int.parse(ing.id)).toList();
+Navigator.pushNamed(context, '/recettes', arguments: ids);
+ },
+  backgroundColor: ZWColors.orange,
+  label: const Text('Trouver des recettes', style: TextStyle(fontWeight: FontWeight.bold)),
+  icon: const Icon(Icons.search),
+),
     );
   }
 

@@ -5,7 +5,7 @@ import '../models/home_stats.dart';
 import '../models/recette.dart';
 
 class HomeService {
-static const String _base = 'https://eternity-rehire-sanitary.ngrok-free.dev/api'; // 10.0.2.2 = localhost depuis l'émulateur Android
+static const String _base = 'https://hurry-unbend-eradicate.ngrok-free.dev/api'; // 10.0.2.2 = localhost depuis l'émulateur Android
   // Pour iPhone simulateur → 127.0.0.1
 
   // Token JWT stocké après login
