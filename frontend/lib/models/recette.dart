@@ -21,10 +21,10 @@ class Recette {
   factory Recette.fromJson(Map<String, dynamic> json) => Recette(
     id:               json['id'],
     nom:              json['nom'],
-    niveauDifficulte: json['niveau_difficulte'] ?? '',
-    tempsPreparation: json['temps_preparation'] ?? 0,
+    niveauDifficulte: json['niveauDifficulte'] ?? json['niveau_difficulte'] ?? '',
+    tempsPreparation: json['tempsPreparation'] ?? json['temps_preparation'] ?? 0,
     compatibilite:    json['compatibilite'] ?? 0,
     imageUrl:         json['image_url'],
-    nbManquants:      json['nb_manquants'] ?? 0,
+    nbManquants:      json['manquants'] ?? json['nb_manquants'] ?? 0,
   );
 }

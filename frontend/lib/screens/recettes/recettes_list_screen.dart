@@ -4,7 +4,7 @@ import '../../core/theme/colors.dart';
 import '../../models/recette.dart';
 import '../../services/recette_service.dart';
 import '../../widgets/bottom_nav_bar.dart';
-
+import '../../services/ingredient_service.dart';
 class RecettesListScreen extends StatefulWidget {
   const RecettesListScreen({super.key});
 
@@ -18,6 +18,7 @@ class _RecettesListScreenState extends State<RecettesListScreen> {
 
   List<Recette> _recettes = [];
   bool _isLoading = true;
+  bool _noMatch = false;
   String? _error;
 
   // Filtre difficulté : null = Tous
@@ -30,39 +31,63 @@ class _RecettesListScreenState extends State<RecettesListScreen> {
     'Difficile',
   ];
 
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
+  List<int> _ingredientIds = [];
+bool _isSuggestionMode = false;
+
+@override
+void initState() {
+  super.initState();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args != null && args is List<int> && args.isNotEmpty) {
+      setState(() {
+        _ingredientIds = args;
+        _isSuggestionMode = true;
+      });
+      _load();
+    } else {
+      _load();
+    }
+  });
+}
 
   @override
   void dispose() {
     _searchCtrl.dispose();
     super.dispose();
   }
-
-  Future<void> _load() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-    try {
-      final recettes = await _service.fetchRecettes(
+Future<void> _load() async {
+  setState(() {
+    _isLoading = true;
+    _error = null;
+  });
+  try {
+    List<Recette> recettes = [];
+    if (_isSuggestionMode && _ingredientIds.isNotEmpty) {
+      final response = await IngredientService().fetchSuggestionsRaw(_ingredientIds);
+      setState(() {
+        _noMatch = response['no_match'] ?? false;
+      });
+      recettes = (response['suggestions'] as List)
+          .map((s) => Recette.fromJson(s))
+          .toList();
+    } else {
+      recettes = await _service.fetchRecettes(
         search: _searchCtrl.text.trim().isEmpty ? null : _searchCtrl.text.trim(),
         difficulte: _selectedDifficulte,
       );
-      setState(() {
-        _recettes = recettes;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
     }
+    setState(() {
+      _recettes = recettes;
+      _isLoading = false;
+    });
+  } catch (e) {
+    setState(() {
+      _error = e.toString();
+      _isLoading = false;
+    });
   }
+}
 
   void _onSearchChanged(String _) => _load();
 
@@ -216,35 +241,53 @@ class _RecettesListScreenState extends State<RecettesListScreen> {
   // ──────────────────────────── Body ──────────────────────────────────────────
 
   Widget _buildBody() {
-    if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: ZWColors.orange),
-      );
-    }
+  if (_isLoading) {
+    return const Center(child: CircularProgressIndicator(color: ZWColors.orange));
+  }
+  if (_error != null) return _buildError();
+  if (_recettes.isEmpty) return _buildEmpty();
 
-    if (_error != null) {
-      return _buildError();
-    }
-
-    if (_recettes.isEmpty) {
-      return _buildEmpty();
-    }
-
-    return RefreshIndicator(
-      color: ZWColors.orange,
-      onRefresh: _load,
-      child: ListView.builder(
-        padding: const EdgeInsets.only(top: 12, bottom: 24),
-        itemCount: _recettes.length,
-        itemBuilder: (context, index) => _RecetteCard(
-          recette: _recettes[index],
-          onTap: () {
-            // TODO: Navigator.pushNamed(context, '/recette', arguments: recette.id)
-          },
+  return Column(
+    children: [
+      if (_noMatch)
+        Container(
+          margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: ZWColors.orange.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: ZWColors.orange.withOpacity(0.3)),
+          ),
+          child: const Row(
+            children: [
+              Icon(Icons.info_outline, color: ZWColors.orange, size: 20),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Aucune recette exacte trouvée. Voici les recettes les plus proches !',
+                  style: TextStyle(color: ZWColors.orange, fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+        ),
+      Expanded(
+        child: RefreshIndicator(
+          color: ZWColors.orange,
+          onRefresh: _load,
+          child: ListView.builder(
+            padding: const EdgeInsets.only(top: 12, bottom: 24),
+            itemCount: _recettes.length,
+            itemBuilder: (context, index) => _RecetteCard(
+              recette: _recettes[index],
+              onTap: () {},
+            ),
+          ),
         ),
       ),
-    );
-  }
+    ],
+  );
+}
 
   Widget _buildError() {
     return Center(
