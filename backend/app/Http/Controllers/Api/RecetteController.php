@@ -83,4 +83,39 @@ class RecetteController extends Controller
 
     return response()->json($recettes);
 }
+
+    // GET /api/recettes/{id}
+    public function show(int $id)
+    {
+        $recette = Recette::with('ingredients')->findOrFail($id);
+ 
+        $ingredients = $recette->ingredients->map(function ($ing) {
+            return [
+                'id'         => $ing->id,
+                'nom'        => $ing->nom,
+                'quantite'   => $ing->pivot->quantite ?? '',
+                'disponible' => false, // pas de frigo lié ici
+            ];
+        });
+ 
+        // instructions est stocké en JSON dans la DB
+        $instructions = [];
+        if ($recette->instructions) {
+            $decoded = json_decode($recette->instructions, true);
+            $instructions = is_array($decoded) ? $decoded : [];
+        }
+ 
+        return response()->json([
+            'id'               => $recette->id,
+            'nom'              => $recette->nom,
+            'description'      => $recette->description,
+            'image_url'        => $recette->image_url,
+            'niveauDifficulte' => $recette->niveauDifficulte,
+            'tempsPreparation' => $recette->tempsPreparation,
+            'tempsCuisson'     => $recette->tempsCuisson,
+            'compatibilite'    => 0,
+            'instructions'     => $instructions,
+            'ingredients'      => $ingredients->values(),
+        ]);
+    }
 }
