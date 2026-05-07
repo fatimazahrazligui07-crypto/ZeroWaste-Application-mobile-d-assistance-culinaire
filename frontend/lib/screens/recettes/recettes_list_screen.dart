@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import '../../core/theme/colors.dart';
 import '../../models/recette.dart';
 import '../../services/recette_service.dart';
-import '../../widgets/bottom_nav_bar.dart';
 import '../../services/ingredient_service.dart';
+import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/recipe_card.dart';
+import 'recette_detail_screen.dart';
+
 class RecettesListScreen extends StatefulWidget {
   const RecettesListScreen({super.key});
 
@@ -21,81 +24,71 @@ class _RecettesListScreenState extends State<RecettesListScreen> {
   bool _noMatch = false;
   String? _error;
 
-  // Filtre difficulté : null = Tous
   String? _selectedDifficulte;
-
-  static const List<String> _niveaux = [
-    'Tous',
-    'Facile',
-    'Moyen',
-    'Difficile',
-  ];
-
   List<int> _ingredientIds = [];
-bool _isSuggestionMode = false;
+  bool _isSuggestionMode = false;
 
-@override
-void initState() {
-  super.initState();
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    final args = ModalRoute.of(context)?.settings.arguments;
-    if (args != null && args is List<int> && args.isNotEmpty) {
-      setState(() {
-        _ingredientIds = args;
-        _isSuggestionMode = true;
-      });
+  static const List<String> _niveaux = ['Tous', 'Facile', 'Moyen', 'Difficile'];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args != null && args is List<int> && args.isNotEmpty) {
+        setState(() {
+          _ingredientIds = args;
+          _isSuggestionMode = true;
+        });
+      }
       _load();
-    } else {
-      _load();
-    }
-  });
-}
+    });
+  }
 
   @override
   void dispose() {
     _searchCtrl.dispose();
     super.dispose();
   }
-Future<void> _load() async {
-  setState(() {
-    _isLoading = true;
-    _error = null;
-  });
-  try {
-    List<Recette> recettes = [];
-    if (_isSuggestionMode && _ingredientIds.isNotEmpty) {
-      final response = await IngredientService().fetchSuggestionsRaw(_ingredientIds);
-      setState(() {
-        _noMatch = response['no_match'] ?? false;
-      });
-      recettes = (response['suggestions'] as List)
-          .map((s) => Recette.fromJson(s))
-          .toList();
-    } else {
-      recettes = await _service.fetchRecettes(
-        search: _searchCtrl.text.trim().isEmpty ? null : _searchCtrl.text.trim(),
-        difficulte: _selectedDifficulte,
-      );
+
+  Future<void> _load() async {
+    setState(() { _isLoading = true; _error = null; });
+    try {
+      List<Recette> recettes = [];
+      if (_isSuggestionMode && _ingredientIds.isNotEmpty) {
+        final response = await IngredientService().fetchSuggestionsRaw(_ingredientIds);
+        setState(() { _noMatch = response['no_match'] ?? false; });
+        recettes = (response['suggestions'] as List)
+            .map((s) => Recette.fromJson(s))
+            .toList();
+      } else {
+        recettes = await _service.fetchRecettes(
+          search: _searchCtrl.text.trim().isEmpty ? null : _searchCtrl.text.trim(),
+          difficulte: _selectedDifficulte,
+        );
+      }
+      setState(() { _recettes = recettes; _isLoading = false; });
+    } catch (e) {
+      setState(() { _error = e.toString(); _isLoading = false; });
     }
-    setState(() {
-      _recettes = recettes;
-      _isLoading = false;
-    });
-  } catch (e) {
-    setState(() {
-      _error = e.toString();
-      _isLoading = false;
-    });
   }
-}
 
   void _onSearchChanged(String _) => _load();
 
   void _onDifficulteSelected(String niveau) {
-    setState(() {
-      _selectedDifficulte = niveau == 'Tous' ? null : niveau;
-    });
+    setState(() { _selectedDifficulte = niveau == 'Tous' ? null : niveau; });
     _load();
+  }
+
+  // ── Navigation vers le détail ──────────────────────────────────────────────
+
+  void _openDetail(Recette recette) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => RecetteDetailScreen(recetteId: recette.id),
+      ),
+    );
   }
 
   @override
@@ -117,8 +110,6 @@ Future<void> _load() async {
       bottomNavigationBar: const ZWBottomNavBar(currentIndex: 2),
     );
   }
-
-  // ──────────────────────────── Header ────────────────────────────────────────
 
   Widget _buildHeader() {
     return Padding(
@@ -145,18 +136,13 @@ Future<void> _load() async {
     );
   }
 
-  // ──────────────────────────── Search bar ────────────────────────────────────
-
   Widget _buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: TextField(
         controller: _searchCtrl,
         onChanged: _onSearchChanged,
-        style: const TextStyle(
-          fontSize: 14,
-          color: ZWColors.brunFonce,
-        ),
+        style: const TextStyle(fontSize: 14, color: ZWColors.brunFonce),
         decoration: InputDecoration(
           hintText: 'Rechercher une recette...',
           hintStyle: const TextStyle(color: ZWColors.taupe, fontSize: 14),
@@ -164,33 +150,23 @@ Future<void> _load() async {
           suffixIcon: _searchCtrl.text.isNotEmpty
               ? IconButton(
             icon: const Icon(Icons.close_rounded, color: ZWColors.taupe, size: 18),
-            onPressed: () {
-              _searchCtrl.clear();
-              _load();
-            },
+            onPressed: () { _searchCtrl.clear(); _load(); },
           )
               : null,
           filled: true,
           fillColor: Colors.white,
           contentPadding: const EdgeInsets.symmetric(vertical: 12),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide.none,
-          ),
+              borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide.none,
-          ),
+              borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: ZWColors.orange, width: 1.5),
-          ),
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: ZWColors.orange, width: 1.5)),
         ),
       ),
     );
   }
-
-  // ──────────────────────────── Difficulty chips ──────────────────────────────
 
   Widget _buildDifficulteFilter() {
     return SizedBox(
@@ -204,7 +180,6 @@ Future<void> _load() async {
           final niveau = _niveaux[index];
           final isSelected = (niveau == 'Tous' && _selectedDifficulte == null) ||
               niveau == _selectedDifficulte;
-
           return GestureDetector(
             onTap: () => _onDifficulteSelected(niveau),
             child: AnimatedContainer(
@@ -214,13 +189,9 @@ Future<void> _load() async {
                 color: isSelected ? ZWColors.orange : Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: isSelected
-                    ? [
-                  BoxShadow(
+                    ? [BoxShadow(
                     color: ZWColors.orange.withOpacity(0.30),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ]
+                    blurRadius: 8, offset: const Offset(0, 3))]
                     : [],
               ),
               child: Text(
@@ -238,56 +209,55 @@ Future<void> _load() async {
     );
   }
 
-  // ──────────────────────────── Body ──────────────────────────────────────────
-
   Widget _buildBody() {
-  if (_isLoading) {
-    return const Center(child: CircularProgressIndicator(color: ZWColors.orange));
-  }
-  if (_error != null) return _buildError();
-  if (_recettes.isEmpty) return _buildEmpty();
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator(color: ZWColors.orange));
+    }
+    if (_error != null) return _buildError();
+    if (_recettes.isEmpty) return _buildEmpty();
 
-  return Column(
-    children: [
-      if (_noMatch)
-        Container(
-          margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: ZWColors.orange.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: ZWColors.orange.withOpacity(0.3)),
-          ),
-          child: const Row(
-            children: [
-              Icon(Icons.info_outline, color: ZWColors.orange, size: 20),
-              SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Aucune recette exacte trouvée. Voici les recettes les plus proches !',
-                  style: TextStyle(color: ZWColors.orange, fontSize: 13),
+    return Column(
+      children: [
+        if (_noMatch)
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: ZWColors.orange.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: ZWColors.orange.withOpacity(0.3)),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.info_outline, color: ZWColors.orange, size: 20),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Aucune recette exacte trouvée. Voici les recettes les plus proches !',
+                    style: TextStyle(color: ZWColors.orange, fontSize: 13),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      Expanded(
-        child: RefreshIndicator(
-          color: ZWColors.orange,
-          onRefresh: _load,
-          child: ListView.builder(
-            padding: const EdgeInsets.only(top: 12, bottom: 24),
-            itemCount: _recettes.length,
-            itemBuilder: (context, index) => _RecetteCard(
-              recette: _recettes[index],
-              onTap: () {},
+        Expanded(
+          child: RefreshIndicator(
+            color: ZWColors.orange,
+            onRefresh: _load,
+            child: ListView.builder(
+              padding: const EdgeInsets.only(top: 12, bottom: 24),
+              itemCount: _recettes.length,
+              // ✅ FIX : onTap navigue vers RecetteDetailScreen
+              itemBuilder: (context, index) => RecipeCard(
+                recette: _recettes[index],
+                onTap: () => _openDetail(_recettes[index]),
+              ),
             ),
           ),
         ),
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
 
   Widget _buildError() {
     return Center(
@@ -298,13 +268,9 @@ Future<void> _load() async {
           children: [
             const Icon(Icons.wifi_off_rounded, size: 48, color: ZWColors.taupe),
             const SizedBox(height: 12),
-            Text(
+            const Text(
               'Impossible de charger les recettes',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: ZWColors.brunFonce,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: ZWColors.brunFonce),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
@@ -327,15 +293,12 @@ Future<void> _load() async {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.restaurant_menu_rounded, size: 56, color: ZWColors.taupe.withOpacity(0.4)),
+            Icon(Icons.restaurant_menu_rounded,
+                size: 56, color: ZWColors.taupe.withOpacity(0.4)),
             const SizedBox(height: 16),
             const Text(
               'Aucune recette trouvée',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: ZWColors.brunFonce,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: ZWColors.brunFonce),
             ),
             const SizedBox(height: 6),
             const Text(
@@ -348,176 +311,4 @@ Future<void> _load() async {
       ),
     );
   }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  Carte recette : grande image en haut + infos en bas
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _RecetteCard extends StatelessWidget {
-  final Recette recette;
-  final VoidCallback onTap;
-
-  const _RecetteCard({required this.recette, required this.onTap});
-
-  Color get _compatColor {
-    if (recette.compatibilite >= 90) return const Color(0xFF4CAF50);
-    if (recette.compatibilite >= 60) return ZWColors.safran;
-    return ZWColors.orange;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Image avec badges superposés ──
-            Stack(
-              children: [
-                // Image
-                ClipRRect(
-                  borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(20)),
-                  child: AspectRatio(
-                    aspectRatio: 16 / 9,
-                    child: recette.imageUrl != null
-                        ? Image.network(
-                      recette.imageUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _placeholder(),
-                    )
-                        : _placeholder(),
-                  ),
-                ),
-                // Badge "X manquants" (gauche)
-                if (recette.nbManquants > 0)
-                  Positioned(
-                    top: 10,
-                    left: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: ZWColors.orange,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        '${recette.nbManquants} manquant${recette.nbManquants > 1 ? 's' : ''}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                // Badge compatibilité (droite)
-                Positioned(
-                  top: 10,
-                  right: 10,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.55),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 7,
-                          height: 7,
-                          decoration: BoxDecoration(
-                            color: _compatColor,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          '${recette.compatibilite}%',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            // ── Infos ──
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Nom
-                  Text(
-                    recette.nom,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: ZWColors.brunFonce,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-                  // Temps + Difficulté
-                  Row(
-                    children: [
-                      const Icon(Icons.access_time_rounded,
-                          size: 15, color: ZWColors.taupe),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${recette.tempsPreparation} min',
-                        style: const TextStyle(
-                            fontSize: 12, color: ZWColors.taupe),
-                      ),
-                      const SizedBox(width: 16),
-                      const Icon(Icons.bar_chart_rounded,
-                          size: 15, color: ZWColors.taupe),
-                      const SizedBox(width: 4),
-                      Text(
-                        recette.niveauDifficulte,
-                        style: const TextStyle(
-                            fontSize: 12, color: ZWColors.taupe),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _placeholder() => Container(
-    color: ZWColors.orangeLight,
-    child: const Center(
-      child: Icon(Icons.restaurant_rounded,
-          color: ZWColors.orange, size: 44),
-    ),
-  );
 }

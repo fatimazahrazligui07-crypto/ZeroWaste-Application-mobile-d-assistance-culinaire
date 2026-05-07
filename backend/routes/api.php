@@ -33,8 +33,12 @@ use App\Http\Controllers\Api\RecetteController;
 Route::get('/ingredients', [IngredientController::class, 'index']);
 Route::get('/categories', [IngredientController::class, 'categories']);
 Route::get('/home', [HomeController::class, 'index']);
+
+// Recette routes
 Route::post('/recettes/suggest', [RecetteController::class, 'suggest']);
 Route::get('/recettes', [RecetteController::class, 'index']);
+Route::get('/recettes/{id}', [RecetteController::class, 'show']);
+
 // Auth routes
 Route::prefix('auth')->group(function () {
     Route::post('/signup', [AuthController::class, 'signup']);
