@@ -1,480 +1,371 @@
-// lib/screens/recettes/recette_detail_screen.dart
 import 'package:flutter/material.dart';
 import '../../core/theme/colors.dart';
 import '../../models/recette.dart';
-import '../../services/recette_service.dart';
 import '../../widgets/bottom_nav_bar.dart';
 
 class RecetteDetailScreen extends StatefulWidget {
-  final int recetteId;
-  const RecetteDetailScreen({super.key, required this.recetteId});
+  final Recette recette;
+  const RecetteDetailScreen({super.key, required this.recette});
 
   @override
   State<RecetteDetailScreen> createState() => _RecetteDetailScreenState();
 }
 
 class _RecetteDetailScreenState extends State<RecetteDetailScreen> {
-  final _service = RecetteService();
-  RecetteDetail? _detail;
-  bool _isLoading = true;
-  String? _error;
+  bool _isFavori = false;
+  int _currentStep = 0;
 
-  // Onglet actif : 0 = Ingrédients, 1 = Préparation
-  int _tab = 0;
+  final List<Map<String, String>> _ingredientsDisponibles = [
+    {'nom': 'Poulet coupé', 'quantite': '500g'},
+    {'nom': 'Citrons confits', 'quantite': '2'},
+    {'nom': 'Oignons', 'quantite': '2'},
+    {'nom': 'Cumin', 'quantite': '1 c.à.c'},
+    {'nom': 'Paprika', 'quantite': '1 c.à.c'},
+    {'nom': 'Coriandre fraîche', 'quantite': '1 bouquet'},
+  ];
 
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
+  final List<Map<String, String>> _ingredientsManquants = [
+    {'nom': 'Olives vertes', 'quantite': '100g'},
+  ];
 
-  Future<void> _load() async {
-    setState(() { _isLoading = true; _error = null; });
-    try {
-      final d = await _service.fetchDetail(widget.recetteId);
-      setState(() { _detail = d; _isLoading = false; });
-    } catch (e) {
-      setState(() { _error = e.toString(); _isLoading = false; });
-    }
-  }
+  final List<String> _etapes = [
+    "Faire revenir le poulet avec les oignons émincés dans une cocotte avec un peu d'huile d'olive.",
+    "Ajouter le cumin, le paprika, sel et poivre. Bien mélanger.",
+    "Ajouter les citrons confits coupés en quartiers et les olives.",
+    "Verser un verre d'eau, couvrir et laisser mijoter 35-40 minutes à feu doux.",
+    "Parsemer de coriandre fraîche ciselée avant de servir.",
+    "Accompagner de pain marocain ou de semoule.",
+  ];
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: ZWColors.fondPrincipal,
-        body: Center(child: CircularProgressIndicator(color: ZWColors.orange)),
-      );
-    }
-    if (_error != null || _detail == null) {
-      return Scaffold(
-        backgroundColor: ZWColors.fondPrincipal,
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.wifi_off_rounded, size: 48, color: ZWColors.taupe),
-              const SizedBox(height: 12),
-              const Text('Impossible de charger la recette'),
-              TextButton(onPressed: _load, child: const Text('Réessayer')),
-            ],
-          ),
-        ),
-      );
-    }
-
-    final d = _detail!;
     return Scaffold(
-      backgroundColor: ZWColors.fondPrincipal,
-      bottomNavigationBar: const ZWBottomNavBar(currentIndex: 2),
-      body: CustomScrollView(
-        slivers: [
-          _buildAppBar(d),
-          SliverToBoxAdapter(child: _buildBody(d)),
-        ],
-      ),
-      bottomSheet: _tab == 1 ? _buildStepButton(d) : null,
-    );
-  }
-
-  // ── AppBar avec image ───────────────────────────────────────────────────────
-
-  Widget _buildAppBar(RecetteDetail d) {
-    return SliverAppBar(
-      expandedHeight: 260,
-      pinned: true,
-      backgroundColor: ZWColors.fondPrincipal,
-      leading: GestureDetector(
-        onTap: () => Navigator.pop(context),
-        child: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 6)],
-          ),
-          child: const Icon(Icons.arrow_back_rounded, color: ZWColors.brunFonce, size: 20),
-        ),
-      ),
-      actions: [
-        _circleButton(Icons.favorite_border_rounded),
-        const SizedBox(width: 4),
-        _circleButton(Icons.share_rounded),
-        const SizedBox(width: 10),
-      ],
-      flexibleSpace: FlexibleSpaceBar(
-        background: d.imageUrl != null
-            ? Image.network(
-          d.imageUrl!,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _imgPlaceholder(),
-        )
-            : _imgPlaceholder(),
-      ),
-    );
-  }
-
-  Widget _circleButton(IconData icon) {
-    return Container(
-      width: 36,
-      height: 36,
-      margin: const EdgeInsets.only(top: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 6)],
-      ),
-      child: Icon(icon, color: ZWColors.brunFonce, size: 18),
-    );
-  }
-
-  Widget _imgPlaceholder() => Container(
-    color: ZWColors.orangeLight,
-    child: const Center(
-      child: Icon(Icons.restaurant_rounded, color: ZWColors.orange, size: 60),
-    ),
-  );
-
-  // ── Corps principal ─────────────────────────────────────────────────────────
-
-  Widget _buildBody(RecetteDetail d) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: const Color(0xFFF5F0EB),
+      body: Stack(
         children: [
-          // Titre
-          Text(
-            d.nom,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: ZWColors.brunFonce,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 10),
-
-          // Méta : temps · difficulté · personnes
-          _buildMeta(d),
-          const SizedBox(height: 16),
-
-          // Carte infos nutritionnelles (placeholder)
-          _buildNutritionCard(),
-          const SizedBox(height: 24),
-
-          // Onglets Ingrédients / Préparation
-          _buildTabs(),
-          const SizedBox(height: 16),
-
-          // Contenu de l'onglet
-          _tab == 0 ? _buildIngredients(d) : _buildPreparation(d),
-        ],
-      ),
-    );
-  }
-
-  // ── Méta ────────────────────────────────────────────────────────────────────
-
-  Widget _buildMeta(RecetteDetail d) {
-    return Row(
-      children: [
-        const Icon(Icons.access_time_rounded, size: 15, color: ZWColors.orange),
-        const SizedBox(width: 4),
-        Text('${d.tempsTotal} min',
-            style: const TextStyle(fontSize: 13, color: ZWColors.taupe)),
-        const SizedBox(width: 14),
-        const Icon(Icons.bar_chart_rounded, size: 15, color: ZWColors.taupe),
-        const SizedBox(width: 4),
-        Text(d.niveauDifficulte,
-            style: const TextStyle(fontSize: 13, color: ZWColors.taupe)),
-        const SizedBox(width: 14),
-        const Icon(Icons.people_alt_outlined, size: 15, color: ZWColors.taupe),
-        const SizedBox(width: 4),
-        Text('${d.nbPersonnes} personnes',
-            style: const TextStyle(fontSize: 13, color: ZWColors.taupe)),
-      ],
-    );
-  }
-
-  // ── Carte nutrition ─────────────────────────────────────────────────────────
-
-  Widget _buildNutritionCard() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: ZWColors.vertBasilic.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: ZWColors.vertBasilic.withOpacity(0.2)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: ZWColors.vertBasilic.withOpacity(0.15),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.info_outline_rounded,
-                color: ZWColors.vertBasilic, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
+          SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Informations nutritionnelles',
-                    style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                        color: ZWColors.brunFonce)),
-                const SizedBox(height: 2),
-                Text('450 cal • 35g • 25g • 20g',
-                    style: TextStyle(
-                        fontSize: 11,
-                        color: ZWColors.taupe.withOpacity(0.8))),
+                _buildHeader(context),
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildInfoGenerales(),
+                      const SizedBox(height: 16),
+                      _buildNutritionButton(context),
+                      const SizedBox(height: 24),
+                      _buildIngredients(),
+                      const SizedBox(height: 24),
+                      _buildEtapes(),
+                      const SizedBox(height: 100),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
-          const Icon(Icons.arrow_forward_ios_rounded,
-              size: 14, color: ZWColors.vertBasilic),
+          Positioned(
+            bottom: 0, left: 0, right: 0,
+            child: _buildBottomButton(),
+          ),
+        ],
+      ),
+      bottomNavigationBar: const ZWBottomNavBar(currentIndex: 2),
+    );
+  }
+
+  // ─── Header ───────────────────────────────────────────────────────────────
+  Widget _buildHeader(BuildContext context) {
+    return SizedBox(
+      height: 288,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          widget.recette.imageUrl != null
+              ? Image.network(
+                  widget.recette.imageUrl!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    color: const Color(0xFFFF4E1F).withOpacity(0.2),
+                    child: const Icon(Icons.restaurant, size: 80, color: Color(0xFFFF4E1F)),
+                  ),
+                )
+              : Container(
+                  color: const Color(0xFFFF4E1F).withOpacity(0.2),
+                  child: const Icon(Icons.restaurant, size: 80, color: Color(0xFFFF4E1F)),
+                ),
+          // Dégradé bas
+          Positioned(
+            bottom: 0, left: 0, right: 0,
+            child: Container(
+              height: 100,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.4)],
+                ),
+              ),
+            ),
+          ),
+          // Bouton retour
+          Positioned(
+            top: 48, left: 16,
+            child: _circleBtn(Icons.arrow_back_ios_new, null, () => Navigator.pop(context)),
+          ),
+          // Favoris + partage
+          Positioned(
+            top: 48, right: 16,
+            child: Row(
+              children: [
+                _circleBtn(
+                  _isFavori ? Icons.favorite : Icons.favorite_border,
+                  _isFavori ? Colors.red : null,
+                  () => setState(() => _isFavori = !_isFavori),
+                ),
+                const SizedBox(width: 8),
+                _circleBtn(Icons.share_outlined, null, () {}),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  // ── Onglets ─────────────────────────────────────────────────────────────────
+  Widget _circleBtn(IconData icon, Color? color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40, height: 40,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 8)],
+        ),
+        child: Icon(icon, size: 20, color: color ?? const Color(0xFF3E2723)),
+      ),
+    );
+  }
 
-  Widget _buildTabs() {
-    return Row(
+  // ─── Infos générales ──────────────────────────────────────────────────────
+  Widget _buildInfoGenerales() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _tabChip('Ingrédients', 0),
-        const SizedBox(width: 10),
-        _tabChip('Préparation', 1),
+        Text(
+          widget.recette.nom,
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Color(0xFF3E2723)),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            _chip(Icons.access_time, '${widget.recette.tempsPreparation} min'),
+            const SizedBox(width: 16),
+            _chip(Icons.restaurant_menu, widget.recette.niveauDifficulte),
+            const SizedBox(width: 16),
+            _chip(Icons.people_outline, '4 personnes'),
+          ],
+        ),
       ],
     );
   }
 
-  Widget _tabChip(String label, int index) {
-    final active = _tab == index;
+  Widget _chip(IconData icon, String label) => Row(
+    children: [
+      Icon(icon, size: 16, color: const Color(0xFFFF4E1F)),
+      const SizedBox(width: 4),
+      Text(label, style: const TextStyle(fontSize: 13, color: Color(0xFF8D7B6B), fontWeight: FontWeight.w500)),
+    ],
+  );
+
+  // ─── Nutrition ────────────────────────────────────────────────────────────
+  Widget _buildNutritionButton(BuildContext context) {
     return GestureDetector(
-      onTap: () => setState(() => _tab = index),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 9),
+      onTap: () => Navigator.pushNamed(context, '/recettes/nutrition', arguments: widget.recette),
+      child: Container(
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: active ? ZWColors.orange : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: active
-              ? [BoxShadow(
-              color: ZWColors.orange.withOpacity(0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 3))]
-              : [],
+          color: const Color(0xFF3E7D52).withOpacity(0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFF3E7D52).withOpacity(0.25)),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: active ? Colors.white : ZWColors.taupe,
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ── Onglet Ingrédients ──────────────────────────────────────────────────────
-
-  Widget _buildIngredients(RecetteDetail d) {
-    return Column(
-      children: d.ingredients
-          .map((ing) => _IngredientRow(ingredient: ing))
-          .toList(),
-    );
-  }
-
-  // ── Onglet Préparation ──────────────────────────────────────────────────────
-
-  Widget _buildPreparation(RecetteDetail d) {
-    return Column(
-      children: d.instructions
-          .asMap()
-          .entries
-          .map((entry) => _StepRow(
-        index: entry.key,
-        text: entry.value,
-        isFirst: entry.key == 0,
-      ))
-          .toList(),
-    );
-  }
-
-  // ── Bouton "Étape suivante" (visible onglet préparation) ────────────────────
-
-  Widget _buildStepButton(RecetteDetail d) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
-      color: ZWColors.fondPrincipal,
-      child: SizedBox(
-        width: double.infinity,
-        height: 52,
-        child: ElevatedButton(
-          onPressed: () {},
-          style: ElevatedButton.styleFrom(
-            backgroundColor: ZWColors.orange,
-            foregroundColor: Colors.white,
-            shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-            elevation: 0,
-          ),
-          child: const Text(
-            'Étape suivante',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-          ),
+        child: Row(
+          children: [
+            Container(
+              width: 40, height: 40,
+              decoration: const BoxDecoration(color: Color(0xFF3E7D52), shape: BoxShape.circle),
+              child: const Icon(Icons.info_outline, color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Informations nutritionnelles',
+                      style: TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF3E7D52), fontSize: 14)),
+                  SizedBox(height: 2),
+                  Text('450 cal  •  35g  •  25g  •  20g',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF8D7B6B))),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, size: 16, color: Color(0xFF3E7D52)),
+          ],
         ),
       ),
     );
   }
-}
 
-// ─── Widget ligne ingrédient ──────────────────────────────────────────────────
+  // ─── Ingrédients ──────────────────────────────────────────────────────────
+  Widget _buildIngredients() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Ingrédients',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF3E2723))),
+        const SizedBox(height: 12),
+        ..._ingredientsDisponibles.map((i) => _ingRow(i, true)),
+        const SizedBox(height: 8),
+        ..._ingredientsManquants.map((i) => _ingRow(i, false)),
+      ],
+    );
+  }
 
-class _IngredientRow extends StatelessWidget {
-  final IngredientLigne ingredient;
-  const _IngredientRow({required this.ingredient});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _ingRow(Map<String, String> ing, bool dispo) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(
+          color: dispo
+              ? const Color(0xFF3E7D52).withOpacity(0.4)
+              : const Color(0xFFFF4E1F).withOpacity(0.4),
+        ),
       ),
       child: Row(
         children: [
-          // Icône disponibilité
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: ingredient.disponible
-                  ? ZWColors.vertBasilic.withOpacity(0.12)
-                  : ZWColors.orange.withOpacity(0.10),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              ingredient.disponible
-                  ? Icons.check_rounded
-                  : Icons.close_rounded,
-              size: 16,
-              color: ingredient.disponible ? ZWColors.vertBasilic : ZWColors.orange,
-            ),
+          Icon(
+            dispo ? Icons.check_circle : Icons.cancel,
+            size: 20,
+            color: dispo ? const Color(0xFF3E7D52) : const Color(0xFFFF4E1F),
           ),
           const SizedBox(width: 12),
-          // Nom
           Expanded(
-            child: Text(
-              ingredient.nom,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: ingredient.disponible
-                    ? ZWColors.brunFonce
-                    : ZWColors.brunFonce.withOpacity(0.6),
-              ),
-            ),
+            child: Text(ing['nom']!,
+                style: const TextStyle(fontSize: 14, color: Color(0xFF3E2723), fontWeight: FontWeight.w500)),
           ),
-          // Quantité
-          Text(
-            ingredient.quantite,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: ZWColors.taupe,
-            ),
-          ),
+          Text(ing['quantite']!, style: const TextStyle(fontSize: 13, color: Color(0xFF8D7B6B))),
         ],
       ),
     );
   }
-}
 
-// ─── Widget étape préparation ─────────────────────────────────────────────────
+  // ─── Étapes ───────────────────────────────────────────────────────────────
+  Widget _buildEtapes() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Préparation',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF3E2723))),
+        const SizedBox(height: 12),
+        ...List.generate(_etapes.length, _etapeCard),
+      ],
+    );
+  }
 
-class _StepRow extends StatelessWidget {
-  final int index;
-  final String text;
-  final bool isFirst;
-  const _StepRow({required this.index, required this.text, required this.isFirst});
+  Widget _etapeCard(int i) {
+    final done = i < _currentStep;
+    final active = i == _currentStep;
 
-  @override
-  Widget build(BuildContext context) {
+    final circleBg = done
+        ? const Color(0xFF3E7D52)
+        : active
+            ? const Color(0xFFFF4E1F)
+            : const Color(0xFFF5F0EB);
+
+    final child = done
+        ? const Icon(Icons.check, color: Colors.white, size: 16)
+        : Text('${i + 1}',
+            style: TextStyle(
+              color: active ? Colors.white : const Color(0xFF8D7B6B),
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ));
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isFirst ? Colors.white : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: isFirst
-            ? Border.all(color: ZWColors.orange.withOpacity(0.5), width: 1.5)
-            : null,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: active ? const Color(0xFFFF4E1F) : Colors.transparent,
+          width: active ? 1.5 : 0,
+        ),
+        boxShadow: active
+            ? [BoxShadow(color: const Color(0xFFFF4E1F).withOpacity(0.15), blurRadius: 12, offset: const Offset(0, 4))]
+            : [],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Numéro
           Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: isFirst ? ZWColors.orange : ZWColors.beigeInput,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                '${index + 1}',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: isFirst ? Colors.white : ZWColors.taupe,
-                ),
-              ),
-            ),
+            width: 32, height: 32,
+            decoration: BoxDecoration(color: circleBg, shape: BoxShape.circle),
+            child: Center(child: child),
           ),
           const SizedBox(width: 12),
-          // Texte
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                text,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: ZWColors.brunFonce,
-                  height: 1.5,
-                ),
+            child: Text(
+              _etapes[i],
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.5,
+                color: active ? const Color(0xFF3E2723) : const Color(0xFF8D7B6B),
+                fontWeight: active ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ─── Bouton bas ───────────────────────────────────────────────────────────
+  Widget _buildBottomButton() {
+    final last = _currentStep >= _etapes.length - 1;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      color: const Color(0xFFF5F0EB),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: () {
+            if (last) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('🎉 Recette terminée ! Bon appétit !')),
+              );
+            } else {
+              setState(() => _currentStep++);
+            }
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFFF4E1F),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            elevation: 0,
+          ),
+          child: Text(
+            last ? 'Terminer la recette' : 'Étape suivante',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+        ),
       ),
     );
   }
