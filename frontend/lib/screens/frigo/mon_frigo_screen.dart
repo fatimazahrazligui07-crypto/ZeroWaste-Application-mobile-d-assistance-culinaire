@@ -1,3 +1,9 @@
+// lib/screens/frigo/mon_frigo_screen.dart
+//
+// MODIFICATION : le FloatingActionButton ne navigue plus directement vers
+// '/recettes'.  Il ouvre d'abord AffinerRechercheScreen pour que l'utilisateur
+// renseigne les contraintes (quantités, temps, nb personnes).
+
 import 'package:flutter/material.dart';
 import '../../core/theme/colors.dart';
 import '../../models/categorie.dart';
@@ -5,6 +11,7 @@ import '../../models/ingredient.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/ingredient_card.dart';
 import '../../services/ingredient_service.dart';
+import 'affiner_recherche_screen.dart'; // ← nouveau import
 
 class MonFrigoScreen extends StatefulWidget {
   const MonFrigoScreen({super.key});
@@ -15,10 +22,10 @@ class MonFrigoScreen extends StatefulWidget {
 
 class _MonFrigoScreenState extends State<MonFrigoScreen> {
   final IngredientService _ingredientService = IngredientService();
-  
+
   String _searchQuery = '';
   String _selectedCategoryId = 'tout';
-  
+
   List<Categorie> _categories = [
     const Categorie(id: 'tout', label: 'Tout', svgIcon: ''),
   ];
@@ -55,18 +62,54 @@ class _MonFrigoScreenState extends State<MonFrigoScreen> {
     } catch (e) {
       setState(() {
         _isLoading = false;
-        _error = "Impossible de charger les données. Vérifiez que le backend est lancé.";
+        _error =
+            "Impossible de charger les données. Vérifiez que le backend est lancé.";
       });
     }
   }
 
+  // ── Navigation vers AffinerRechercheScreen ────────────────────────────────
+
+  void _onTrouverRecettes() {
+    final selectedIngredients =
+        _ingredients.where((ing) => ing.selectionne).toList();
+
+    if (selectedIngredients.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sélectionnez au moins 1 ingrédient !'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // On pousse l'écran de contraintes sur le stack de navigation
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AffinerRechercheScreen(
+          selectedIngredients: selectedIngredients,
+        ),
+      ),
+    );
+  }
+
+  // ── Build ─────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
     final filteredIngredients = _ingredients.where((ing) {
-      final matchesSearch = ing.nom.toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchesCategory = _selectedCategoryId == 'tout' || ing.categorieId == _selectedCategoryId;
+      final matchesSearch =
+          ing.nom.toLowerCase().contains(_searchQuery.toLowerCase());
+      final matchesCategory = _selectedCategoryId == 'tout' ||
+          ing.categorieId == _selectedCategoryId;
       return matchesSearch && matchesCategory;
     }).toList();
+
+    // Nombre d'ingrédients sélectionnés (pour le badge du FAB)
+    final nbSelected =
+        _ingredients.where((i) => i.selectionne).length;
 
     return Scaffold(
       backgroundColor: ZWColors.fondPrincipal,
@@ -84,34 +127,47 @@ class _MonFrigoScreenState extends State<MonFrigoScreen> {
       ),
       bottomNavigationBar: const ZWBottomNavBar(currentIndex: 1),
       floatingActionButton: FloatingActionButton.extended(
-  onPressed: () {
-    final selectedIngredients = _ingredients
-        .where((ing) => ing.selectionne)
-        .toList();
-
-    if (selectedIngredients.length < 2) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sélectionnez au moins 2 ingrédients !'),
-          backgroundColor: Colors.red,
+        onPressed: _onTrouverRecettes,
+        backgroundColor: ZWColors.orange,
+        icon: const Icon(Icons.tune_rounded, color: Colors.white),
+        label: Row(
+          children: [
+            const Text(
+              'Affiner & trouver',
+              style: TextStyle(
+                  fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+            if (nbSelected > 0) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '$nbSelected',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
-      );
-      return;
-    }
-
-    final ids = selectedIngredients.map((ing) => int.parse(ing.id)).toList();
-Navigator.pushNamed(context, '/recettes', arguments: ids);
- },
-  backgroundColor: ZWColors.orange,
-  label: const Text('Trouver des recettes', style: TextStyle(fontWeight: FontWeight.bold)),
-  icon: const Icon(Icons.search),
-),
+      ),
     );
   }
 
+  // ── Widgets internes (inchangés) ──────────────────────────────────────────
+
   Widget _buildContent(List<Ingredient> filteredIngredients) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: ZWColors.orange));
+      return const Center(
+          child: CircularProgressIndicator(color: ZWColors.orange));
     }
 
     if (_error != null) {
@@ -119,12 +175,16 @@ Navigator.pushNamed(context, '/recettes', arguments: ids);
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: ZWColors.taupe)),
+            Text(_error!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: ZWColors.taupe)),
             const SizedBox(height: 10),
             ElevatedButton(
               onPressed: _loadData,
-              style: ElevatedButton.styleFrom(backgroundColor: ZWColors.orange),
-              child: const Text('Réessayer', style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: ZWColors.orange),
+              child: const Text('Réessayer',
+                  style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
@@ -133,7 +193,8 @@ Navigator.pushNamed(context, '/recettes', arguments: ids);
 
     if (filteredIngredients.isEmpty) {
       return const Center(
-        child: Text('Aucun ingrédient trouvé', style: TextStyle(color: ZWColors.taupe)),
+        child: Text('Aucun ingrédient trouvé',
+            style: TextStyle(color: ZWColors.taupe)),
       );
     }
 
@@ -168,9 +229,13 @@ Navigator.pushNamed(context, '/recettes', arguments: ids);
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Mon Frigo',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: ZWColors.brunFonce)),
+                    style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: ZWColors.brunFonce)),
                 Text('Sélectionnez vos ingrédients',
-                    style: TextStyle(fontSize: 14, color: ZWColors.taupe)),
+                    style:
+                        TextStyle(fontSize: 14, color: ZWColors.taupe)),
               ],
             ),
             const Spacer(),
@@ -188,7 +253,8 @@ Navigator.pushNamed(context, '/recettes', arguments: ids);
           onChanged: (val) => setState(() => _searchQuery = val),
           decoration: InputDecoration(
             hintText: 'Rechercher un ingrédient...',
-            prefixIcon: const Icon(Icons.search, color: ZWColors.taupe),
+            prefixIcon:
+                const Icon(Icons.search, color: ZWColors.taupe),
             filled: true,
             fillColor: Colors.white,
             border: OutlineInputBorder(
@@ -213,14 +279,18 @@ Navigator.pushNamed(context, '/recettes', arguments: ids);
               child: ChoiceChip(
                 label: Text(cat.label),
                 selected: isSelected,
-                onSelected: (val) => setState(() => _selectedCategoryId = cat.id),
+                onSelected: (val) =>
+                    setState(() => _selectedCategoryId = cat.id),
                 selectedColor: ZWColors.orange,
                 labelStyle: TextStyle(
                   color: isSelected ? Colors.white : ZWColors.taupe,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  fontWeight: isSelected
+                      ? FontWeight.bold
+                      : FontWeight.normal,
                 ),
                 backgroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
               ),
             );
           },

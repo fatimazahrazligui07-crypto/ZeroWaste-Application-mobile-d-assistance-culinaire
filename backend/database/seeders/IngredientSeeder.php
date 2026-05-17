@@ -81,12 +81,7 @@ class IngredientSeeder extends Seeder
                 'couleur'   => '#F9A825',
                 'svgIcon'   => '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M16 5c0-1.7-1.3-3-3-3S10 3.3 10 5c0 1 .5 2 1.2 2.6L7 20h10l-3.2-12.4C14.5 7 16 6 16 5z" fill="currentColor"/><path d="M7 20h10" stroke="#E65100" stroke-width="1.5" stroke-linecap="round"/></svg>',
             ],
-            [
-                'categorie' => 'proteines',
-                'nom'       => 'Agneau',
-                'couleur'   => '#8D6E63',
-                'svgIcon'   => '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="13" rx="7" ry="5" fill="currentColor"/><circle cx="9" cy="9" r="3" fill="currentColor"/><circle cx="15" cy="9" r="3" fill="currentColor"/><ellipse cx="12" cy="9" rx="4" ry="3" fill="currentColor"/><path d="M9 18v3M15 18v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
-            ],
+           
             [
                 'categorie' => 'proteines',
                 'nom'       => 'Bœuf',
@@ -123,18 +118,7 @@ class IngredientSeeder extends Seeder
                 'couleur'   => '#0288D1',
                 'svgIcon'   => '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M2 12c0 0 5-6 10-6s10 6 10 6-5 6-10 6S2 12 2 12z" fill="currentColor"/><circle cx="17" cy="12" r="1.5" fill="white"/><path d="M22 8l-2 4 2 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>',
             ],
-            [
-                'categorie' => 'proteines',
-                'nom'       => 'Crevettes',
-                'couleur'   => '#FF7043',
-                'svgIcon'   => '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8 4c-2 2-3 5-2 8s4 5 7 5c2 0 4-1 5-3" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/><path d="M13 17c1 2 1 3 0 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M7 6l-3-1M7 9l-3 0M7 12l-3 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>',
-            ],
-            [
-                'categorie' => 'proteines',
-                'nom'       => 'Merguez',
-                'couleur'   => '#C62828',
-                'svgIcon'   => '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 16c0 0 2-8 8-10s10 2 10 2" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M4 16c0 1.5 1 2 2 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>',
-            ],
+           
 
             // ─── Épices ────────────────────────────────────────────────────────────
             [
@@ -149,12 +133,7 @@ class IngredientSeeder extends Seeder
                 'couleur'   => '#D84315',
                 'svgIcon'   => '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 21c4 0 6-3 6-7s-2-8-6-8-6 4-6 8 2 7 6 7z" fill="currentColor"/><path d="M12 6V3M11 4c-1-2 3-2 2 0" stroke="#1B5E20" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>',
             ],
-            [
-                'categorie' => 'epices',
-                'nom'       => 'Ras el hanout',
-                'couleur'   => '#6A1B9A',
-                'svgIcon'   => '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="4" fill="currentColor"/><path d="M12 4v3M12 17v3M4 12h3M17 12h3M6.3 6.3l2.1 2.1M15.6 15.6l2.1 2.1M6.3 17.7l2.1-2.1M15.6 8.4l2.1-2.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
-            ],
+           
             [
                 'categorie' => 'epices',
                 'nom'       => 'Curcuma',
@@ -255,12 +234,7 @@ class IngredientSeeder extends Seeder
                 'couleur'   => '#F3E5F5',
                 'svgIcon'   => '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 6h10v2l1 12H6L7 8V6z" fill="currentColor" stroke="#CE93D8" stroke-width="1"/><path d="M7 8h10" stroke="#CE93D8" stroke-width="1"/><path d="M10 6V4h4v2" stroke="#CE93D8" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>',
             ],
-            [
-                'categorie' => 'produits-laitiers',
-                'nom'       => 'Crème fraîche',
-                'couleur'   => '#FFF9C4',
-                'svgIcon'   => '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="12" rx="9" ry="6" fill="currentColor" stroke="#F9A825" stroke-width="1"/><path d="M6 11c2-2 4-2 6 0s4 2 6 0" stroke="#FDD835" stroke-width="1.2" stroke-linecap="round" fill="none"/></svg>',
-            ],
+          
 
             // ─── Fruits ────────────────────────────────────────────────────────────
             [
@@ -275,18 +249,7 @@ class IngredientSeeder extends Seeder
                 'couleur'   => '#FB8C00',
                 'svgIcon'   => '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="13" r="8" fill="currentColor"/><path d="M12 5V3M10 4l2-2 2 2" stroke="#2E7D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8v10M7 13h10" stroke="white" stroke-width="1" opacity="0.3"/></svg>',
             ],
-            [
-                'categorie' => 'fruits',
-                'nom'       => 'Dattes',
-                'couleur'   => '#4E342E',
-                'svgIcon'   => '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><ellipse cx="10" cy="14" rx="4" ry="6" fill="currentColor"/><ellipse cx="16" cy="13" rx="3.5" ry="5.5" fill="currentColor"/><path d="M10 8V4M10 4c0-2 3-2 3 0" stroke="#795548" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>',
-            ],
-            [
-                'categorie' => 'fruits',
-                'nom'       => 'Figues',
-                'couleur'   => '#6A1B9A',
-                'svgIcon'   => '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 21c4 0 6-3 6-7s-4-8-6-8-6 4-6 8 2 7 6 7z" fill="currentColor"/><path d="M12 6V3" stroke="#2E7D32" stroke-width="1.8" stroke-linecap="round"/><path d="M12 11v5" stroke="#CE93D8" stroke-width="1" stroke-linecap="round" opacity="0.6"/></svg>',
-            ],
+          
             [
                 'categorie' => 'fruits',
                 'nom'       => 'Olives',
@@ -313,18 +276,7 @@ class IngredientSeeder extends Seeder
                 'couleur'   => '#B71C1C',
                 'svgIcon'   => '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8 5h8l1 14H7L8 5z" fill="currentColor" stroke="#7F0000" stroke-width="0.8"/><path d="M9 5V3h6v2" stroke="#7F0000" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M9 10c2 2 5 2 6 0" stroke="#FF5252" stroke-width="1" stroke-linecap="round" opacity="0.6"/></svg>',
             ],
-            [
-                'categorie' => 'huiles',
-                'nom'       => 'Chermoula',
-                'couleur'   => '#2E7D32',
-                'svgIcon'   => '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 19l3-8 3 3 3-6 3 11" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M4 19h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
-            ],
-            [
-                'categorie' => 'huiles',
-                'nom'       => 'Harissa',
-                'couleur'   => '#E53935',
-                'svgIcon'   => '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 20c0 0-7-5-7-11 0-4 3-6 7-6s7 2 7 6c0 6-7 11-7 11z" fill="currentColor"/><path d="M9 9c1-2 5-2 6 0" stroke="#FF8F00" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/><path d="M10 13c1-1 4-1 4 0" stroke="#FF8F00" stroke-width="1" stroke-linecap="round" opacity="0.5"/></svg>',
-            ],
+         
         ];
 
         foreach ($ingredients as $item) {

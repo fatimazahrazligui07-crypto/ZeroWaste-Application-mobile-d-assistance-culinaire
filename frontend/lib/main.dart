@@ -3,6 +3,7 @@ import 'package:frontend/services/auth_screen.dart';
 
 import 'screens/home/home_screen.dart';
 import 'screens/frigo/mon_frigo_screen.dart';
+import 'screens/frigo/affiner_recherche_screen.dart'; // ← nouveau
 import 'screens/recettes/recettes_list_screen.dart';
 import 'screens/profil/profil_screen.dart';
 import 'core/theme/colors.dart';
@@ -42,6 +43,17 @@ class ZeroWasteApp extends StatelessWidget {
     final recette = ModalRoute.of(context)!.settings.arguments as Recette;
     return NutritionScreen(recette: recette);
   },
+  // ── Affiner la recherche ───────────────────────────────────────────
+        // Note : utilisé en fallback. La navigation normale se fait via
+        // Navigator.push() depuis MonFrigoScreen (selectedIngredients requis).
+        '/affiner': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments;
+          if (args is List) {
+            // pas d'ingrédients à passer ici via route nommée — rediriger
+            return const MonFrigoScreen();
+          }
+          return const MonFrigoScreen();
+        },
       },
     );
   }
