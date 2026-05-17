@@ -4,7 +4,7 @@ import '../models/ingredient.dart';
 import '../models/categorie.dart';
 
 class IngredientService {
-static const String _base ='http://10.0.2.2:8000/api';
+static const String _base ='https://eternity-rehire-sanitary.ngrok-free.dev/api';
   Future<List<Ingredient>> fetchIngredients() async {
     final response = await http.get(Uri.parse('$_base/ingredients'));
 

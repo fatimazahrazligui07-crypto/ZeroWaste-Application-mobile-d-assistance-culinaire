@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../models/ingredient.dart';
-import '../core/theme/colors.dart';
 
 class IngredientCard extends StatelessWidget {
   final Ingredient ingredient;
@@ -17,17 +15,22 @@ class IngredientCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: ingredient.selectionne ? ZWColors.orangeLight : Colors.white,
+          color: ingredient.selectionne
+              ? (ingredient.couleur?.withOpacity(0.15) ?? Colors.orange.withOpacity(0.15))
+              : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: ingredient.selectionne ? ZWColors.orange : Colors.transparent,
+            color: ingredient.selectionne
+                ? (ingredient.couleur ?? Colors.orange)
+                : Colors.transparent,
             width: 2,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withOpacity(0.06),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -36,33 +39,55 @@ class IngredientCard extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (ingredient.svgIcon != null)
-              SvgPicture.string(
-                ingredient.svgIcon!,
-                width: 32,
-                height: 32,
-                colorFilter: ColorFilter.mode(
-                  ingredient.couleur ?? ZWColors.taupe,
-                  BlendMode.srcIn,
-                ),
-              )
-            else
-              Icon(
-                Icons.restaurant_rounded,
-                size: 32,
-                color: ingredient.couleur ?? ZWColors.taupe,
-              ),
+            _buildIcon(),
             const SizedBox(height: 8),
             Text(
               ingredient.nom,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: ingredient.selectionne ? FontWeight.w700 : FontWeight.w500,
-                color: ZWColors.brunFonce,
-              ),
               textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: ingredient.selectionne
+                    ? FontWeight.bold
+                    : FontWeight.normal,
+                color: const Color(0xFF3E2723),
+              ),
             ),
+            if (ingredient.selectionne)
+              const Icon(Icons.check_circle, color: Colors.orange, size: 16),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIcon() {
+    final icon = ingredient.svgIcon;
+
+    if (icon != null && icon.startsWith('http')) {
+      return Image.network(
+        icon,
+        width: 48,
+        height: 48,
+        fit: BoxFit.contain,
+        errorBuilder: (_, __, ___) => Icon(
+          Icons.fastfood,
+          size: 40,
+          color: ingredient.couleur ?? Colors.grey,
+        ),
+      );
+    }
+
+    return CircleAvatar(
+      backgroundColor: ingredient.couleur ?? Colors.grey.shade300,
+      radius: 24,
+      child: Text(
+        ingredient.nom[0].toUpperCase(),
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 18,
         ),
       ),
     );

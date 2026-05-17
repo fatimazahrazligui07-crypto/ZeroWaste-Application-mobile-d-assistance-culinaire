@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/recette.dart';
 
 class RecetteService {
-  static const String _base = 'http://10.0.2.2:8000/api';
+  static const String _base = 'https://eternity-rehire-sanitary.ngrok-free.dev/api';
 
   Future<Map<String, String>> get _headers async {
     final prefs = await SharedPreferences.getInstance();

@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AuthService {
   //final String _baseUrl = 'http://10.0.2.2:8000/api'; // Remplacez par l'URL de votre backend Laravel
   // Pour Android Emulator, utilisez 10.0.2.2. Pour iOS Simulator ou un appareil réel, utilisez l'IP de votre machine.
-static const String _baseUrl = 'http://10.0.2.2:8000/api'; // 10.0.2.2 = localhost depuis l'émulateur Android
+static const String _baseUrl = 'https://eternity-rehire-sanitary.ngrok-free.dev/api'; // 10.0.2.2 = localhost depuis l'émulateur Android
   Future<Map<String, dynamic>> signup(
       String firstname, String? lastname, String username, String email, String password, String passwordConfirmation) async {
     final response = await http.post(

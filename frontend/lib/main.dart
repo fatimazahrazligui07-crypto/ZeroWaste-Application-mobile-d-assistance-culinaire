@@ -6,6 +6,8 @@ import 'screens/frigo/mon_frigo_screen.dart';
 import 'screens/recettes/recettes_list_screen.dart';
 import 'screens/profil/profil_screen.dart';
 import 'core/theme/colors.dart';
+import 'models/recette.dart';
+import 'screens/recettes/nutrition_screen.dart'; // ajouter cet import
 
 void main() => runApp(const ZeroWasteApp());
 
@@ -35,6 +37,11 @@ class ZeroWasteApp extends StatelessWidget {
         '/frigo':    (_) => const MonFrigoScreen(),
         '/recettes': (_) => const RecettesListScreen(),
         '/profil':   (_) => const ProfilScreen(),
+       // ← Ajouter cette route
+  '/recettes/nutrition': (context) {
+    final recette = ModalRoute.of(context)!.settings.arguments as Recette;
+    return NutritionScreen(recette: recette);
+  },
       },
     );
   }
