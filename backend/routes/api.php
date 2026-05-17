@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\ProfileController;
@@ -51,3 +52,11 @@ Route::post('/password/update', [ProfileController::class, 'updatePassword'])->m
 
 Route::get('/profile', [ProfileController::class, 'show'])->middleware('auth:sanctum');
 Route::post('/profile/update', [ProfileController::class, 'update'])->middleware('auth:sanctum');
+
+Route::middleware('auth:sanctum')->group(function () {
+    // Favorites
+    Route::get('/favorites',                [FavoriteController::class, 'index']);
+    Route::post('/favorites/{recette_id}',  [FavoriteController::class, 'store']);
+    Route::delete('/favorites/{recette_id}', [FavoriteController::class, 'destroy']);
+    Route::get('/favorites/{recette_id}/check', [FavoriteController::class, 'check']);
+});
