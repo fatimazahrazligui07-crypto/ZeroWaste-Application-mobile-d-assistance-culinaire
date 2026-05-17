@@ -85,19 +85,22 @@ class IngredientLigne {
   final int id;
   final String nom;
   final String quantite;
+  final String unite;
   final bool disponible;
 
   IngredientLigne({
     required this.id,
     required this.nom,
     required this.quantite,
+    required this.unite,
     required this.disponible,
   });
 
   factory IngredientLigne.fromJson(Map<String, dynamic> json) => IngredientLigne(
     id:         json['id'],
     nom:        json['nom'],
-    quantite:   json['quantite'] ?? '',
+    quantite:   json['quantite']?.toString() ?? '',
+    unite:      json['unite']?.toString() ?? '',
     disponible: json['disponible'] ?? false,
   );
 }

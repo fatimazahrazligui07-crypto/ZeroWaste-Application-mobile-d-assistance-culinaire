@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Recette;
+use App\Models\IntervalleTemps;
+use App\Services\UnitConverter;
 
 class RecetteController extends Controller
 {
@@ -12,20 +14,45 @@ class RecetteController extends Controller
     public function suggest(Request $request)
     {
         $request->validate([
-            'ingredient_ids'   => 'required|array|min:2',
-            'ingredient_ids.*' => 'integer|exists:ingredients,id',
+            'ingredients' => 'required|array|min:1',
+            'ingredients.*.id' => 'required|integer|exists:ingredients,id',
+            'ingredients.*.quantite' => 'nullable|numeric',
+            'ingredients.*.unite' => 'nullable|string',
         ]);
     
-        $selectedIds = array_map('intval', $request->ingredient_ids);
+        $userIngredients = $request->ingredients;
         $recettes = Recette::with('ingredients')->get();
     
-        $mapped = $recettes->map(function ($recette) use ($selectedIds) {
-            $totalIngredients   = $recette->ingredients->count();
-            $ingredientsRecette = $recette->ingredients->pluck('id')->toArray();
-            $matching           = count(array_intersect($selectedIds, $ingredientsRecette));
-            $manquants          = count(array_diff($ingredientsRecette, $selectedIds));
-            $compatibilite      = $totalIngredients > 0
-                ? round(($matching / $totalIngredients) * 100)
+        $mapped = $recettes->map(function ($recette) use ($userIngredients) {
+            $totalIngredients = $recette->ingredients->count();
+            $matchingCount = 0;
+            $manquants = [];
+
+            foreach ($recette->ingredients as $recetteIng) {
+                $found = false;
+                foreach ($userIngredients as $userIng) {
+                    if ($userIng['id'] == $recetteIng->id) {
+                        // Si l'utilisateur a fourni une quantité et une unité, on vérifie
+                        if (isset($userIng['quantite'], $userIng['unite']) && isset($recetteIng->pivot->quantite, $recetteIng->pivot->unite)) {
+                            if (UnitConverter::hasEnough($userIng['quantite'], $userIng['unite'], $recetteIng->pivot->quantite, $recetteIng->pivot->unite)) {
+                                $matchingCount++;
+                                $found = true;
+                            }
+                        } else {
+                            // Si pas de quantité/unité spécifiée, on compte juste l'ingrédient
+                            $matchingCount++;
+                            $found = true;
+                        }
+                        break;
+                    }
+                }
+                if (!$found) {
+                    $manquants[] = $recetteIng->nom;
+                }
+            }
+
+            $compatibilite = $totalIngredients > 0
+                ? round(($matchingCount / $totalIngredients) * 100)
                 : 0;
     
             return [
@@ -35,18 +62,15 @@ class RecetteController extends Controller
                 'niveauDifficulte'      => $recette->niveauDifficulte,
                 'tempsPreparation'      => $recette->tempsPreparation,
                 'compatibilite'         => $compatibilite,
-                'matching'              => $matching,
-                'manquants'             => $manquants,
-                'ingredients_manquants' => $recette->ingredients
-                    ->whereNotIn('id', $selectedIds)
-                    ->pluck('nom')
-                    ->values(),
+                'matching'              => $matchingCount,
+                'manquants'             => count($manquants),
+                'ingredients_manquants' => $manquants,
             ];
         });
     
         // Recettes avec au moins 1 ingredient matching
         $suggestions = $mapped
-            ->filter(fn($r) => $r['matching'] >= 1 && $r['manquants'] <= 3)
+            ->filter(fn($r) => $r['matching'] >= 1)
             ->sortByDesc('compatibilite')
             ->values();
     
@@ -67,22 +91,23 @@ class RecetteController extends Controller
             'no_match'    => $noMatch,
         ]);
     }
-    public function index()
-{
-    $recettes = Recette::with('ingredients')->get()->map(function ($recette) {
-        return [
-            'id'               => $recette->id,
-            'nom'              => $recette->nom,
-            'image_url'        => $recette->image_url,
-            'niveauDifficulte' => $recette->niveauDifficulte,
-            'tempsPreparation' => $recette->tempsPreparation,
-            'compatibilite'    => 0,
-            'manquants'        => 0,
-        ];
-    });
 
-    return response()->json($recettes);
-}
+    public function index()
+    {
+        $recettes = Recette::with('ingredients')->get()->map(function ($recette) {
+            return [
+                'id'               => $recette->id,
+                'nom'              => $recette->nom,
+                'image_url'        => $recette->image_url,
+                'niveauDifficulte' => $recette->niveauDifficulte,
+                'tempsPreparation' => $recette->tempsPreparation,
+                'compatibilite'    => 0,
+                'manquants'        => 0,
+            ];
+        });
+
+        return response()->json($recettes);
+    }
 
     // GET /api/recettes/{id}
     public function show(int $id)
@@ -94,11 +119,11 @@ class RecetteController extends Controller
                 'id'         => $ing->id,
                 'nom'        => $ing->nom,
                 'quantite'   => $ing->pivot->quantite ?? '',
-                'disponible' => false, // pas de frigo lié ici
+                'unite'      => $ing->pivot->unite ?? '',
+                'disponible' => false,
             ];
         });
  
-        // instructions est stocké en JSON dans la DB
         $instructions = [];
         if ($recette->instructions) {
             $decoded = json_decode($recette->instructions, true);
@@ -117,5 +142,11 @@ class RecetteController extends Controller
             'instructions'     => $instructions,
             'ingredients'      => $ingredients->values(),
         ]);
+    }
+
+    public function getIntervallesTemps()
+    {
+        $intervalles = IntervalleTemps::all();
+        return response()->json($intervalles);
     }
 }

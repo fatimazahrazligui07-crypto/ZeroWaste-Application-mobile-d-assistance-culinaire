@@ -39,6 +39,7 @@ Route::get('/home', [HomeController::class, 'index']);
 Route::post('/recettes/suggest', [RecetteController::class, 'suggest']);
 Route::get('/recettes', [RecetteController::class, 'index']);
 Route::get('/recettes/{id}', [RecetteController::class, 'show']);
+Route::get('/intervalles-temps', [RecetteController::class, 'getIntervallesTemps']);
 
 // Auth routes
 Route::prefix('auth')->group(function () {
